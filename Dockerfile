@@ -1,5 +1,9 @@
-FROM openjdk:8-jdk-alpine
-EXPOSE 8080
-ADD target/*.jar /app.jar
-ENV JAVA_OPTS=""
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar" ]
+FROM maven:3.5.2-jdk-8-alpine AS MAVEN_BUILD
+COPY pom.xml /build/
+COPY src /build/src/
+WORKDIR /build/
+RUN mvn package
+FROM openjdk:8-jre-alpine
+WORKDIR /app
+COPY --from=MAVEN_BUILD /build/target/*.jar /app/app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
